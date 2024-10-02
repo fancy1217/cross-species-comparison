@@ -1,0 +1,40 @@
+#In this tutorial notebook, I will use SAMap to map mouse, xenopus and chicken together.
+#SAMAP quoted in https://github.com/atarashansky/SAMap/blob/main/SAMap_vignette.ipynb ， This is very useful for our work! 
+#For any details, please refer to https://github.com/atarashansky/SAMap/blob/main/SAMap_vignette.ipynb
+#The following code is based on python 3.10
+
+from samap.mapping import SAMAP
+from samap.analysis import (get_mapping_scores, GenePairFinder,
+                            sankey_plot, chord_plot, CellTypeTriangles, 
+                            ParalogSubstitutions, FunctionalEnrichment,
+                            convert_eggnog_to_homologs, GeneTriangles)
+from samalg import SAM
+import pandas as pd
+
+fn1 = 'mmhccount.h5ad'
+fn2 = 'xphccount.h5ad'
+fn3 = 'gghccount.h5ad'
+filenames = {'mm':fn1,'xp':fn2,'gg':fn3}
+sam1=SAM()
+sam1.load_data(fn1)
+sam2=SAM()
+sam2.load_data(fn2)
+sam3=SAM()
+sam3.load_data(fn3)
+sams = {'mm':sam1,'xp':sam2,'gg':sam3}
+sm = SAMAP(
+         sams,
+         f_maps = '/SAMap-main/maps/',   
+ )
+#pairwise is ignored when only mapping two species.
+sm.run(pairwise=True)
+samap = sm.samap # SAM object with three species stitched together
+#head
+sm.sams['mm'].adata.obs
+sm.sams['gg'].adata.obs
+sm.sams['xp'].adata.obs
+keys = {'mm':'cluster','xp':'cluster','gg':'cluster'}
+D,MappingTable = get_mapping_scores(sm,keys,n_top = 10)
+df = pd.DataFrame(D)
+df.to_csv('mm_xp_gg_hc.csv', index=False)
+#Then you can refer to https://github.com/atarashansky/SAMap/blob/main/SAMap_vignette.ipynb to visualize the code, or you can visualize it with the readout file
